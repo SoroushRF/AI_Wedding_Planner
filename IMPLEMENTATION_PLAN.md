@@ -1,61 +1,80 @@
 # TBD — Implementation Plan
 Epic → Phases → Tasks → Steps
+**Hackathon pair build · ~1 hour · Gemini AI**
 
 ---
 
-## Epic 1: Project Foundation
+## Ownership Split (read this first)
 
-### Phase 1.1 — Scaffold & Config
+| Person | Domain | Owns (exclusive) |
+|---|---|---|
+| **Soroush** | Backend / data / AI | `lib/types.ts`, `lib/store.ts`, `lib/prompts.ts`, `app/api/generate/route.ts`, `.env.local`, API error/retry logic |
+| **Parsa** | Frontend / UI / design | `app/layout.tsx`, `app/globals.css`, `app/page.tsx`, `components/**`, shadcn UI setup, Framer Motion |
 
-**Task: Initialize Next.js project**
-- Run `npx create-next-app@latest tbd --typescript --tailwind --app`
-- Select: App Router yes, src/ directory yes, import alias yes (@/*)
-- cd into project, open in Cursor
+**Hard rule:** Do not edit files outside your domain. Consume the other person's public contract only.
 
-**Task: Install dependencies**
-- `npm install framer-motion zustand @anthropic-ai/sdk`
-- `npx shadcn@latest init` (select style: default, base color: neutral)
-- `npx shadcn@latest add button card badge dialog slider input select`
+**Integration contract (Soroush ships first, then freeze):**
+- Types in `lib/types.ts`
+- Store actions/selectors in `lib/store.ts`
+- `POST /api/generate` request = `WeddingFormData`, response = `{ components: PlanComponent[], totalBudget: number }`
 
-**Task: Configure environment**
+**Suggested 60-min timeline**
+
+| Min | Soroush | Parsa |
+|---|---|---|
+| 0–10 | Scaffold + deps + types | Wait for scaffold OR pull; start design tokens in globals once repo exists |
+| 10–25 | Zustand store + localStorage | Landing + LoadingView shell |
+| 25–45 | Prompts + Gemini `/api/generate` | OnboardingForm + PlannerView cards |
+| 45–55 | Wire API validation / retry / budget scale | Wire form → store → API → planner views |
+| 55–60 | Env on Vercel + smoke API | Responsive / demo polish |
+
+---
+
+## Epic 0: Shared Kickoff — **Soroush**
+
+### Phase 0.1 — Scaffold
+
+**Task: Initialize Next.js project** — Soroush
+- Run `npx create-next-app@latest . --typescript --tailwind --app` (in repo root)
+- Select: App Router yes, src/ directory **no** (use `/app` at root for simpler paths), import alias yes (`@/*`)
+- Commit scaffold so Parsa can pull immediately
+
+**Task: Install shared dependencies** — Soroush
+- `npm install framer-motion zustand @google/generative-ai`
+- Tell Parsa when package.json is pushed so he can `npm install`
+
+**Task: Configure environment** — Soroush
 - Create `.env.local` at root
-- Add `ANTHROPIC_API_KEY=your_key_here`
-- Add `.env.local` to `.gitignore`
+- Add `GEMINI_API_KEY=your_key_here`
+- Ensure `.env.local` is in `.gitignore`
+- Create empty stubs Parsa expects:
+  - `app/api/generate/route.ts` (export placeholder until Epic 3)
+  - `lib/types.ts`, `lib/store.ts`, `lib/prompts.ts`
+  - Empty dirs: `components/onboarding/`, `components/planner/`
 
-**Task: Set up fonts and global styles**
-- In `app/layout.tsx`, import Playfair Display + Inter from next/font/google
-- Define CSS variables in `globals.css`:
-  - --background: #FAFAF8
-  - --foreground: #1C1C1E
-  - --accent: #C9A99A
-  - --gold: #B8A88A
-- Set `body` bg and text color from variables
-
-**Task: Set up folder structure**
-- Create `/app/api/generate/route.ts` (empty)
-- Create `/components/onboarding/` directory
-- Create `/components/planner/` directory
-- Create `/lib/store.ts` (Zustand store)
-- Create `/lib/types.ts` (shared TypeScript types)
-- Create `/lib/prompts.ts` (Claude prompt builder)
+**Task: Hand off** — Soroush
+- Push scaffold + types ASAP
+- Ping Parsa: "types frozen, pull and start UI"
 
 ---
 
-## Epic 2: Data Layer
+## Epic 1: Data Layer — **Soroush only**
 
-### Phase 2.1 — Type Definitions
+### Phase 1.1 — Type Definitions
 
-**Task: Define shared types in `/lib/types.ts`**
+**Task: Define shared types in `/lib/types.ts`** — Soroush
 - Define `WeddingFormData`:
   - budget: number
+  - location: string
+  - weddingDate: string (ISO date `YYYY-MM-DD`)
+  - weddingTime?: string (`HH:mm`)
   - guestCount: number
   - venueType: 'ballroom' | 'garden' | 'destination' | 'intimate'
-  - stylePriorities: string[] (max 3)
   - vibe?: 'blacktie' | 'rustic' | 'boho' | 'minimalist' | 'romantic'
 
 - Define `PlanComponent`:
   - id: string
-  - category: enum (catering | florals | photography | venue | entertainment | attire | decor | officiant | transport | other)
+  - category: 'catering' | 'florals' | 'photography' | 'venue' | 'entertainment' | 'attire' | 'decor' | 'officiant' | 'transport' | 'other'
   - name: string
   - description: string
   - estimatedCost: number
@@ -68,218 +87,231 @@ Epic → Phases → Tasks → Steps
   - generatedAt: string (ISO timestamp)
   - formData: WeddingFormData
 
-### Phase 2.2 — Zustand Store
+- Define `GeneratePlanResponse`:
+  - components: PlanComponent[]
+  - totalBudget: number
 
-**Task: Build plan store in `/lib/store.ts`**
-- Define state shape:
+- Export these types. **Freeze after first push** unless both agree in chat.
+
+### Phase 1.2 — Zustand Store
+
+**Task: Build plan store in `/lib/store.ts`** — Soroush
+- State shape:
   - formData: WeddingFormData | null
   - plan: WeddingPlan | null
   - isGenerating: boolean
   - view: 'landing' | 'form' | 'loading' | 'planner'
+  - error: string | null
 
-- Define actions:
-  - setFormData(data: WeddingFormData)
-  - setPlan(plan: WeddingPlan)
-  - setView(view)
-  - setGenerating(bool)
-  - removeComponent(id: string)
-  - addComponent(component: PlanComponent)
-  - clearPlan()
+- Actions (stable signatures for Parsa):
+  - `setFormData(data: WeddingFormData)`
+  - `setPlan(plan: WeddingPlan)`
+  - `setView(view)`
+  - `setGenerating(bool)`
+  - `setError(message: string | null)`
+  - `removeComponent(id: string)`
+  - `addComponent(component: PlanComponent)`
+  - `clearPlan()` — clears plan + error; keeps formData for prefill; sets view to `'form'`
 
-- Wire localStorage persistence:
-  - Use Zustand persist middleware
-  - Persist: plan, formData
-  - Do NOT persist: isGenerating, view
-
----
-
-## Epic 3: AI Layer
-
-### Phase 3.1 — Prompt Engineering
-
-**Task: Build prompt constructor in `/lib/prompts.ts`**
-- Export function `buildSystemPrompt()`:
-  - Returns a string establishing Claude as a luxury wedding planning consultant
-  - Instructs Claude to return ONLY valid JSON, no markdown fences, no preamble
-  - Defines the exact JSON schema (array of PlanComponent objects)
-  - States constraints: min 6 components, max 12, total cost must not exceed budget
-  - Instructs Claude to distribute budget realistically by category weight
-
-- Export function `buildUserPrompt(data: WeddingFormData)`:
-  - Interpolates all form fields into a natural language brief
-  - Example: "Plan a [vibe] wedding for [guestCount] guests at a [venueType] venue with a total budget of $[budget]. Style priorities: [stylePriorities]. Return the plan as a JSON array..."
-  - Appends: "Ensure the sum of all estimatedCost values does not exceed [budget]."
-
-### Phase 3.2 — API Route
-
-**Task: Build `/api/generate/route.ts`**
-- Accept POST, parse body as WeddingFormData
-- Validate required fields (budget, guestCount, venueType) — return 400 if missing
-- Instantiate Anthropic client from SDK using env var
-- Call `client.messages.create()`:
-  - model: 'claude-sonnet-4-6'
-  - max_tokens: 2000
-  - system: buildSystemPrompt()
-  - messages: [{ role: 'user', content: buildUserPrompt(formData) }]
-- Extract text from response content block
-- JSON.parse the text — catch parse errors, return 500 with message
-- Post-process: if sum of estimatedCost > budget, scale all costs down proportionally
-- Return 200 with { components: PlanComponent[], totalBudget: budget }
+- Persist middleware:
+  - Persist: `plan`, `formData`
+  - Do NOT persist: `isGenerating`, `view`, `error`
 
 ---
 
-## Epic 4: UI — Landing Page
+## Epic 2: AI Layer (Gemini) — **Soroush only**
 
-### Phase 4.1 — Landing Page Layout
+### Phase 2.1 — Prompt Engineering
 
-**Task: Build `app/page.tsx` as landing entry**
-- Full-viewport hero section:
-  - Center-aligned
-  - Display heading: "TBD" in Playfair Display, large
-  - Subheading: "Your wedding, thoughtfully planned."
-  - CTA button: "Start Planning" → sets view to 'form' in store
-- Background: subtle off-white texture or soft grain CSS filter, no images
-- Animate CTA in with Framer Motion fadeInUp on mount
+**Task: Build prompt constructor in `/lib/prompts.ts`** — Soroush
+- Export `buildSystemPrompt()`:
+  - Luxury wedding planning consultant persona
+  - Return ONLY valid JSON array — no markdown fences, no preamble
+  - Exact `PlanComponent` schema
+  - Constraints: min 6, max 12 components; sum of `estimatedCost` ≤ budget
+  - Factor location + date/time into realistic category spend (e.g. destination travel, seasonal florals)
 
----
+- Export `buildUserPrompt(data: WeddingFormData)`:
+  - Natural-language brief including budget, location, date, time (if any), guest count, venue type, vibe
+  - Append: sum of estimatedCost must not exceed budget
 
-## Epic 5: UI — Onboarding Form
+### Phase 2.2 — API Route
 
-### Phase 5.1 — Form Component
-
-**Task: Build `/components/onboarding/OnboardingForm.tsx`**
-
-- Step 1 — Budget:
-  - Label: "What's your total wedding budget?"
-  - shadcn Slider component, min 1000, max 150000, step 500
-  - Live formatted display: "$XX,XXX"
-  - Manual text input synced to slider
-
-- Step 2 — Guest Count:
-  - Label: "How many guests are you expecting?"
-  - shadcn Input, type number, min 10, max 500
-  - Inline hint: "Including ceremony and reception"
-
-- Step 3 — Venue Type:
-  - Label: "What kind of venue are you envisioning?"
-  - 4 clickable cards (not a dropdown):
-    - Indoor Ballroom / Outdoor Garden / Destination / Intimate Venue
-  - Selected card gets accent border
-
-- Step 4 — Style Priorities:
-  - Label: "What matters most to you? (pick up to 3)"
-  - 8 pill toggles: Florals, Photography, Catering, Entertainment, Décor, Attire, Officiant, Transport
-  - Disable unselected pills when 3 are chosen
-
-- Step 5 — Vibe (optional):
-  - Label: "What's the overall vibe? (optional)"
-  - 5 pill options: Black Tie, Rustic, Boho, Minimalist, Romantic
-  - Single select, can be deselected
-
-- Submit button:
-  - Text: "Generate My Plan →"
-  - Disabled until budget and guestCount and venueType are filled
-  - On click: call setFormData, setView('loading'), POST to /api/generate
-
-**Task: Handle form submission**
-- On submit, dispatch API call from the form component
-- On success: setPlan(result), setView('planner')
-- On error: show inline error toast, setView('form') to allow retry
+**Task: Build `/api/generate/route.ts`** — Soroush
+- Accept POST, parse body as `WeddingFormData`
+- Validate required: `budget`, `location`, `weddingDate`, `guestCount`, `venueType` — 400 if missing
+- Instantiate Google Generative AI client with `GEMINI_API_KEY`
+- Call Gemini:
+  - model: `gemini-2.0-flash`
+  - system instruction: `buildSystemPrompt()`
+  - user content: `buildUserPrompt(formData)`
+- Extract text from response
+- `JSON.parse` — on failure, retry once; then 500 with structured error
+- Post-process: if sum(estimatedCost) > budget, scale costs proportionally (round to integers)
+- Ensure each component has an `id` (generate uuid if model omits)
+- Return 200: `{ components: PlanComponent[], totalBudget: budget }`
 
 ---
 
-## Epic 6: UI — Loading State
+## Epic 3: Design System & Shell — **Parsa only**
 
-### Phase 6.1 — Loading Screen
+### Phase 3.1 — Visual foundation
 
-**Task: Build `/components/LoadingView.tsx`**
-- Full page centered layout
-- Animated ring or soft pulsing circle in accent color
-- Rotating messages (swap every 2s):
+**Task: Install shadcn + UI primitives** — Parsa
+- `npx shadcn@latest init` (style: default, base color: neutral)
+- `npx shadcn@latest add button card badge dialog slider input select`
+
+**Task: Fonts and global styles** — Parsa
+- In `app/layout.tsx`, import Playfair Display + Inter from `next/font/google`
+- In `globals.css` set:
+  - `--background: #FAFAF8`
+  - `--foreground: #1C1C1E`
+  - `--accent: #C9A99A`
+  - `--gold: #B8A88A`
+- Body uses those variables
+- Soft grain / texture background only — no stock wedding photos
+
+**Task: App shell / view router in `app/page.tsx`** — Parsa
+- Read `view` from Zustand store
+- Render: landing | form | loading | planner
+- Do not implement API or store internals — only call store actions
+
+---
+
+## Epic 4: Landing & Loading — **Parsa only**
+
+### Phase 4.1 — Landing
+
+**Task: Landing hero in `app/page.tsx` (or `components/LandingView.tsx`)** — Parsa
+- Full-viewport, center-aligned
+- Heading: "TBD" (Playfair Display)
+- Subheading: "Your wedding, thoughtfully planned."
+- CTA: "Start Planning" → `setView('form')`
+- Framer Motion fade-in on mount
+
+### Phase 4.2 — Loading
+
+**Task: Build `/components/LoadingView.tsx`** — Parsa
+- Centered full-page
+- Soft pulsing circle in accent color
+- Rotating messages every 2s via `AnimatePresence`:
   - "Reviewing your priorities…"
   - "Allocating your budget thoughtfully…"
   - "Curating your vendor categories…"
   - "Finalizing your plan…"
-- Use Framer Motion `AnimatePresence` for message transitions
 
 ---
 
-## Epic 7: UI — Planner View
+## Epic 5: Onboarding Form — **Parsa only**
 
-### Phase 7.1 — Budget Bar
+### Phase 5.1 — Form UI + submit wiring
 
-**Task: Build `/components/planner/BudgetBar.tsx`**
-- Props: totalBudget, allocatedAmount (sum of current components)
-- Display: three values — Total / Allocated / Remaining
-- Progress bar: filled portion = allocated / total
-- Color coding:
-  - remaining > 20% of total → green
-  - remaining 5–20% → amber
-  - remaining < 5% → red
-- Animate bar fill change on component add/remove using Framer Motion layout animation
+**Task: Build `/components/onboarding/OnboardingForm.tsx`** — Parsa
 
-### Phase 7.2 — Plan Card
+- Budget: slider min 1000 max 150000 step 500 + synced manual input; live `$XX,XXX`
+- Location: text input, required (placeholder e.g. "Toronto, ON")
+- Wedding date: date input, required
+- Wedding time: time input, optional
+- Guest count: number 10–500; hint "Including ceremony and reception"
+- Venue type: 4 selectable cards — Indoor Ballroom / Outdoor Garden / Destination / Intimate Venue
+- Vibe (optional): Black Tie / Rustic / Boho / Minimalist / Romantic
+- Prefill from `formData` in store when returning via Start Over
+- Submit disabled until budget, location, weddingDate, guestCount, venueType filled
+- On submit:
+  1. `setFormData(data)`
+  2. `setView('loading')` + `setGenerating(true)` + `setError(null)`
+  3. `POST /api/generate` with JSON body
+  4. Success → `setPlan({...})` → `setView('planner')`
+  5. Failure → toast/inline error → `setView('form')`
+  6. Always `setGenerating(false)`
 
-**Task: Build `/components/planner/PlanCard.tsx`**
-- Props: component: PlanComponent, onRemove: () => void
-- Layout:
-  - Left: category icon (emoji or lucide icon mapped by category)
-  - Center: name (bold), description (muted small text)
-  - Right: estimated cost formatted as $X,XXX
-- Bottom row: priority badge (shadcn Badge with color by priority), rationale toggle button
-- Rationale expands inline with AnimatePresence
-- Remove button (X icon, top right corner), confirms before removing
-- Entry animation: fadeIn + slideUp with staggered delay by index
-
-### Phase 7.3 — Planner Layout
-
-**Task: Build `/components/planner/PlannerView.tsx`**
-- Header bar:
-  - "TBD" wordmark left
-  - Event summary center (e.g. "Garden Wedding · 120 Guests · Minimalist")
-  - "Start Over" button right (confirm dialog → clearPlan, setView('form'))
-- Budget Bar below header (sticky)
-- Plan cards grid (2-col on desktop, 1-col mobile)
-- Staggered card entry animation on initial render
-- "Add Component" button at bottom of grid → opens AddComponentModal
-
-### Phase 7.4 — Add Component Modal
-
-**Task: Build `/components/planner/AddComponentModal.tsx`**
-- shadcn Dialog
-- Fields: Name (text input), Category (select from enum), Estimated Cost (number input)
-- Validate: all three fields required, cost must be > 0
-- On confirm: generate a uuid for id, set priority to 'optional', rationale to 'Manually added', dispatch addComponent to store
-- On add: modal closes, new card animates in at bottom of grid, budget bar updates
+**Do not** change prompt text, API route, or type shapes — if a field is missing from types, ask Soroush.
 
 ---
 
-## Epic 8: Polish & Deploy
+## Epic 6: Planner View — **Parsa only**
 
-### Phase 8.1 — Responsive Pass
-- Ensure onboarding form is usable on mobile (stack layout, larger tap targets)
-- Planner cards go single column below md breakpoint
-- Budget bar stays readable at 375px width
+### Phase 6.1 — Budget Bar
 
-### Phase 8.2 — Error Handling
-- API route returns structured errors
-- Form catches fetch failure, shows toast: "Something went wrong. Try again."
-- If Claude returns unparseable JSON: retry once automatically, then surface error
+**Task: `/components/planner/BudgetBar.tsx`** — Parsa
+- Props: `totalBudget`, `allocatedAmount`
+- Show Total / Allocated / Remaining
+- Progress fill = allocated / total
+- Colors: remaining >20% green · 5–20% amber · <5% red
+- Animate fill with Framer Motion
 
-### Phase 8.3 — localStorage Wiring Verification
-- Manually test: fill form → generate plan → refresh page → plan still present
-- "Start Over" clears localStorage correctly
-- Confirm Zustand persist middleware is scoped only to plan + formData
+### Phase 6.2 — Plan Card
 
-### Phase 8.4 — Deploy to Vercel
-- Push repo to GitHub
-- Connect to Vercel, import repo
-- Add ANTHROPIC_API_KEY to Vercel environment variables (Production + Preview)
-- Trigger deploy, verify /api/generate works in production (not just localhost)
-- Copy public URL for demo
+**Task: `/components/planner/PlanCard.tsx`** — Parsa
+- Props: `component: PlanComponent`, `onRemove: () => void`
+- Layout: category icon | name + description | cost
+- Priority badge + expandable rationale
+- Remove (confirm) → call `onRemove` (parent uses `removeComponent`)
+- Entry: fade + slideUp, stagger by index
 
-### Phase 8.5 — Demo Dry Run
-- Run through full flow twice end-to-end
-- Confirm plan generates < 10s on production URL
-- Confirm remove + add components update budget correctly
-- Have a backup: screenshot of a generated plan in case of wifi issues at venue
+### Phase 6.3 — Planner layout
+
+**Task: `/components/planner/PlannerView.tsx`** — Parsa
+- Header: "TBD" | summary (`location · date · guestCount · vibe`) | "Start Over" (confirm → `clearPlan`)
+- Sticky BudgetBar
+- 2-col grid desktop / 1-col mobile
+- "Add Component" → modal
+
+### Phase 6.4 — Add Component Modal
+
+**Task: `/components/planner/AddComponentModal.tsx`** — Parsa
+- Dialog: name, category select (from type enum), estimated cost > 0
+- On confirm: uuid id, priority `'optional'`, rationale `'Manually added'`, `addComponent(...)`
+
+---
+
+## Epic 7: Polish & Deploy
+
+### Phase 7.1 — Responsive + UI errors — **Parsa**
+- Form usable on mobile; cards single-col below `md`
+- Budget bar readable at 375px
+- Fetch failure toast: "Something went wrong. Try again."
+
+### Phase 7.2 — API robustness — **Soroush**
+- Structured JSON errors from `/api/generate`
+- Gemini unparseable JSON: retry once, then error payload
+- Confirm budget scaling works
+
+### Phase 7.3 — Persistence check — **together (5 min)**
+- Generate → refresh → plan still there
+- Start Over clears plan correctly; form prefills
+
+### Phase 7.4 — Deploy — **Soroush owns env; either can trigger**
+- Push to GitHub → Vercel
+- Add `GEMINI_API_KEY` (Production + Preview)
+- Verify `/api/generate` on production URL
+
+### Phase 7.5 — Demo dry run — **together**
+- Full flow ×2
+- Confirm <10s generation, add/remove updates budget
+- Backup screenshot of a generated plan
+
+---
+
+## File ownership checklist
+
+### Soroush — may edit
+- `lib/types.ts`
+- `lib/store.ts`
+- `lib/prompts.ts`
+- `app/api/generate/route.ts`
+- `.env.local` / Vercel env docs
+- Root scaffold (`package.json`, `tsconfig`, etc.) until handoff — then avoid UI files
+
+### Parsa — may edit
+- `app/layout.tsx`
+- `app/globals.css`
+- `app/page.tsx`
+- `components/LandingView.tsx` (if split)
+- `components/LoadingView.tsx`
+- `components/onboarding/**`
+- `components/planner/**`
+- `components/ui/**` (shadcn)
+
+### Neither edits the other's files
+If blocked by a missing type/action/API field → message in chat, owner updates their file, other pulls.

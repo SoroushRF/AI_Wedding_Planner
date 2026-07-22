@@ -1,15 +1,15 @@
 # TBD — Product Requirements Document
-Version 1.0 | Hackathon Build | July 2026
+Version 1.1 | Hackathon Build | July 2026
 
 ---
 
 ## 1. Overview
 
 ### 1.1 Product Summary
-TBD is an AI-powered wedding planner that generates a personalized, fully editable wedding plan from a short onboarding form. Users input their budget, guest count, venue type, and style priorities — Claude returns a structured plan broken into components (catering, florals, photography, etc.) that the user can add, remove, and customize in real time with live budget tracking.
+TBD is an AI-powered wedding planner that generates a personalized, fully editable wedding plan from a short onboarding form. Users input their budget, location, date/time, guest count, and style preferences — Gemini returns a structured plan broken into components (catering, florals, photography, etc.) that the user can add, remove, and customize in real time with live budget tracking.
 
 ### 1.2 Problem Statement
-Wedding planning is overwhelming and fragmented. Couples spend hours across dozens of tabs trying to assemble a coherent plan from scratch. Generic checklists don't account for budget, priorities, or style. There's no tool that gives you an intelligent, personalized starting point in under 60 seconds.
+Wedding planning is overwhelming and fragmented. Couples spend hours across dozens of tabs trying to assemble a coherent plan from scratch. Generic checklists don't account for budget, location, timing, or style. There's no tool that gives you an intelligent, personalized starting point in under 60 seconds.
 
 ### 1.3 Target Users
 - Engaged couples in early planning stages (0–6 months post-engagement)
@@ -38,6 +38,7 @@ Wedding planning is overwhelming and fragmented. Couples spend hours across doze
 - Multi-user / couple collaboration
 - Mobile-first design (responsive is a Should Have, not a Must)
 - Saving plans to a backend
+- "Suggest Alternative" AI swap (stretch only if time remains)
 
 ---
 
@@ -46,21 +47,22 @@ Wedding planning is overwhelming and fragmented. Couples spend hours across doze
 1. User lands on the TBD homepage
 2. User fills out the onboarding form:
    - Total budget (slider + manual input)
+   - Location (city / region text)
+   - Wedding date
+   - Wedding time (optional)
    - Guest count
    - Venue type (indoor ballroom / outdoor garden / destination / intimate venue)
-   - Style priorities (ranked or multi-select: florals, photography, catering, entertainment, décor, attire)
-   - Optional: vibe descriptor (black tie / rustic / boho / minimalist / romantic)
+   - Optional: vibe (black tie / rustic / boho / minimalist / romantic)
 3. User clicks "Generate My Plan"
-4. Loading state with subtle animation while Claude processes
+4. Loading state with subtle animation while Gemini processes
 5. Plan page renders with:
-   - Header: event summary (budget, guest count, vibe)
+   - Header: event summary (location, date, budget, guest count, vibe)
    - Budget bar: total vs allocated vs remaining
    - Plan cards: one card per component, each showing name, description, estimated cost, priority tag
 6. User can:
    - Remove a card (budget updates)
-   - Add a custom component (name + estimated cost)
-   - Click "Suggest Alternative" on a card (Claude returns a swap)
-7. At any point, user can click "Regenerate Plan" to start over
+   - Add a custom component (name + category + estimated cost)
+7. At any point, user can click "Start Over" to return to the form
 
 ---
 
@@ -68,16 +70,18 @@ Wedding planning is overwhelming and fragmented. Couples spend hours across doze
 
 ### 4.1 Onboarding Form
 - Budget input: range $1,000–$500,000, default $25,000
+- Location: required text input (city / region)
+- Wedding date: required date input
+- Wedding time: optional time input
 - Guest count: numeric input, range 10–500
 - Venue type: single-select, 4 options
-- Style priorities: multi-select, up to 3, from a set of 8 categories
 - Vibe: optional single-select, 5 options
-- Validation: budget and guest count required before submission
+- Validation: budget, location, wedding date, guest count, and venue type required before submission
 
 ### 4.2 AI Plan Generation
 - On form submit, POST to /api/generate
-- Send structured prompt to Claude with all form inputs
-- Claude returns a JSON array of plan components:
+- Send structured prompt to Gemini with all form inputs
+- Gemini returns a JSON array of plan components:
   - id (string)
   - category (string: catering | florals | photography | venue | entertainment | attire | décor | officiant | transport | other)
   - name (string)
@@ -130,14 +134,19 @@ Wedding planning is overwhelming and fragmented. Couples spend hours across doze
 - localStorage (persistence)
 
 ### AI
-- Anthropic Claude API (claude-sonnet-4-6)
+- Google Gemini API (`@google/generative-ai`)
+- Model: `gemini-2.0-flash`
 - Route: /api/generate (POST)
 - Prompt engineering: system prompt establishes wedding planner persona and JSON contract
-- Response parsing: JSON.parse on content block, validated before render
+- Response parsing: JSON.parse on model text, validated before render
 
 ### Deployment
 - Vercel
-- ANTHROPIC_API_KEY in environment variables
+- `GEMINI_API_KEY` in environment variables
+
+### Team Ownership
+- **Soroush** — data layer, store, Gemini API (see `AGENT_SOROUSH.md`)
+- **Parsa** — UI / design system (see his agent brief)
 
 ---
 
@@ -145,7 +154,8 @@ Wedding planning is overwhelming and fragmented. Couples spend hours across doze
 
 | Risk | Mitigation |
 |---|---|
-| Claude returns malformed JSON | Wrap in try/catch, retry once, fallback error state |
+| Gemini returns malformed JSON | Wrap in try/catch, retry once, fallback error state |
 | Generation takes > 10s | Show animated loading with progress messaging |
 | Budget mismatch in AI output | Post-process: if total > budget, scale costs proportionally |
-| Form feels too long | Collapse vibe/style to optional — budget + guest count is the minimum viable input |
+| Form feels too long | Vibe optional; required = budget + location + date + guest count + venue |
+| Pair collision on files | Strict file ownership — never edit the other person's files |
