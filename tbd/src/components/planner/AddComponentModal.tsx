@@ -56,7 +56,10 @@ export function AddComponentModal({
 
   const costNum = Number(cost);
   const valid =
-    name.trim().length > 0 && category !== null && costNum > 0 && Number.isFinite(costNum);
+    name.trim().length > 0 &&
+    category !== null &&
+    costNum > 0 &&
+    Number.isFinite(costNum);
 
   const handleConfirm = () => {
     if (!valid || !category) return;
@@ -81,9 +84,14 @@ export function AddComponentModal({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="rounded-none border-border bg-[#fffcf8] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-xl">Add component</DialogTitle>
+          <DialogTitle className="font-heading text-2xl tracking-tight">
+            Add component
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Extend your plan with anything the AI didn&apos;t include.
+          </p>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
@@ -93,6 +101,7 @@ export function AddComponentModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Live band"
+              className="rounded-none"
             />
           </div>
           <div className="space-y-2">
@@ -101,7 +110,7 @@ export function AddComponentModal({
               value={category ?? undefined}
               onValueChange={(v) => setCategory(v as PlanCategory)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full rounded-none">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -122,14 +131,25 @@ export function AddComponentModal({
               value={cost}
               onChange={(e) => setCost(e.target.value)}
               placeholder="2500"
+              className="rounded-none"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="btn-editorial rounded-none"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button type="button" disabled={!valid} onClick={handleConfirm}>
+          <Button
+            type="button"
+            disabled={!valid}
+            className="btn-editorial"
+            onClick={handleConfirm}
+          >
             Add to plan
           </Button>
         </DialogFooter>

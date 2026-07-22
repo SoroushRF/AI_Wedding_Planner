@@ -1,14 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+import { formatCurrency } from "@/lib/format";
+import { ease } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 interface BudgetBarProps {
   totalBudget: number;
@@ -16,43 +11,61 @@ interface BudgetBarProps {
 }
 
 export function BudgetBar({ totalBudget, allocatedAmount }: BudgetBarProps) {
-  const remaining = Math.max(0, totalBudget - allocatedAmount);
-  const remainingRatio = totalBudget > 0 ? remaining / totalBudget : 0;
-  const fillRatio = totalBudget > 0 ? Math.min(1, allocatedAmount / totalBudget) : 0;
+  const remaining = totalBudget - allocatedAmount;
+  const over = remaining < 0;
+  const remainingSafe = Math.max(0, remaining);
+  const remainingRatio = totalBudget > 0 ? remainingSafe / totalBudget : 0;
+  const fillRatio = totalBudget > 0 ? Math.min(1.05, allocatedAmount / totalBudget) : 0;
 
-  let barColor = "bg-emerald-600";
-  if (remainingRatio < 0.05) barColor = "bg-red-600";
-  else if (remainingRatio < 0.2) barColor = "bg-amber-500";
+  let tone = "text-emerald-700";
+  let bar = "bg-emerald-700";
+  if (over) {
+    tone = "text-red-700";
+    bar = "bg-red-600";
+  } else if (remainingRatio < 0.05) {
+    tone = "text-red-700";
+    bar = "bg-red-600";
+  } else if (remainingRatio < 0.2) {
+    tone = "text-amber-700";
+    bar = "bg-amber-500";
+  }
 
   return (
-    <div className="border-b border-border bg-background/95 px-4 py-4 backdrop-blur-sm sm:px-6">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="grid grid-cols-3 gap-4 text-sm sm:flex sm:gap-10">
+    <div className="border-b border-border/80 bg-[#f7f4ef]/90 px-4 py-4 backdrop-blur-md sm:px-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4">
+        <div className="grid grid-cols-3 gap-3 text-sm sm:gap-10">
           <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               Total
             </p>
-            <p className="font-medium">{formatCurrency(totalBudget)}</p>
+            <p className="mt-1 font-heading text-xl tracking-tight sm:text-2xl">
+              {formatCurrency(totalBudget)}
+            </p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               Allocated
             </p>
-            <p className="font-medium">{formatCurrency(allocatedAmount)}</p>
+            <p className="mt-1 font-heading text-xl tracking-tight sm:text-2xl">
+              {formatCurrency(allocatedAmount)}
+            </p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">
-              Remaining
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              {over ? "Over budget" : "Remaining"}
             </p>
-            <p className="font-medium">{formatCurrency(remaining)}</p>
+            <p className={cn("mt-1 font-heading text-xl tracking-tight sm:text-2xl", tone)}>
+              {formatCurrency(Math.abs(remaining))}
+            </p>
           </div>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-muted sm:max-w-md">
+
+        <div className="h-1.5 w-full overflow-hidden bg-border/80">
           <motion.div
-            className={`h-full ${barColor}`}
+            className={cn("h-full", bar)}
             initial={false}
-            animate={{ width: `${fillRatio * 100}%` }}
-            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            animate={{ width: `${Math.min(100, fillRatio * 100)}%` }}
+            transition={{ duration: 0.4, ease }}
           />
         </div>
       </div>

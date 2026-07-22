@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -14,7 +14,8 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "TBD — Your wedding, thoughtfully planned",
-  description: "AI-powered wedding planning for engaged couples",
+  description:
+    "AI wedding planner that builds a personalized, editable budget plan in under a minute.",
 };
 
 export default function RootLayout({
@@ -23,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
+    <html lang="en" className={`${dmSans.variable} ${playfair.variable} h-full`}>
       <body className="min-h-full font-sans antialiased">{children}</body>
     </html>
   );
