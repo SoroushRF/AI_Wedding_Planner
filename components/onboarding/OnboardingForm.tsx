@@ -152,11 +152,16 @@ export function OnboardingForm() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(
+        const apiError =
           typeof body.error === "string"
             ? body.error
-            : "Something went wrong. Try again."
-        );
+            : "Something went wrong. Try again.";
+        if (apiError.includes("GEMINI_API_KEY")) {
+          throw new Error(
+            "Add a real GEMINI_API_KEY to .env.local in the project root, then restart npm run dev."
+          );
+        }
+        throw new Error(apiError);
       }
 
       const data = (await res.json()) as GeneratePlanResponse;
@@ -203,7 +208,7 @@ export function OnboardingForm() {
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl">Plan your day</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--ink-soft)]">
-              A few details ΓÇö we&apos;ll build a thoughtful, editable starting plan.
+              A few details — we&apos;ll build a thoughtful, editable starting plan.
             </p>
           </div>
 
@@ -279,7 +284,7 @@ export function OnboardingForm() {
                   </Label>
                   <Input
                     id="location"
-                    placeholder="City or region ΓÇö e.g. Brooklyn, NY"
+                    placeholder="City or region — e.g. Brooklyn, NY"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="rounded-none bg-background/70"
@@ -458,7 +463,7 @@ export function OnboardingForm() {
                   <p className="font-medium text-foreground">Ready to generate</p>
                   <p className="mt-1">
                     {formatCurrency(budget)} ┬╖ {location || "Location"} ┬╖{" "}
-                    {guestCount || "ΓÇö"} guests
+                    {guestCount || "—"} guests
                     {venueType
                       ? ` ┬╖ ${VENUE_OPTIONS.find((v) => v.value === venueType)?.label}`
                       : ""}

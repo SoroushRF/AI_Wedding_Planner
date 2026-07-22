@@ -1,15 +1,15 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ease } from "@/lib/motion";
 
 const STEPS = [
-  "Reviewing your prioritiesΓÇª",
-  "Mapping venue and guest scaleΓÇª",
-  "Allocating your budget thoughtfullyΓÇª",
-  "Curating vendor categoriesΓÇª",
-  "Finalizing your planΓÇª",
+  "Reviewing your priorities...",
+  "Mapping venue and guest scale...",
+  "Allocating your budget thoughtfully...",
+  "Curating vendor categories...",
+  "Finalizing your plan...",
 ];
 
 export function LoadingView() {

@@ -1,4 +1,4 @@
-﻿# AGENT ΓÇö Parsa (Owner: Frontend / UI / Design)
+# AGENT — Parsa (Owner: Frontend / UI / Design)
 
 You are coding as **Parsa** on **TBD**, an AI wedding planner hackathon app.
 Read `PRD.md` and `IMPLEMENTATION_PLAN.md` before writing code.
@@ -10,7 +10,7 @@ Work fast. Stay in your domain. Do not touch Soroush's files.
 
 You own the **entire frontend experience**: design system, landing, onboarding form, loading state, planner UI, animations.
 You consume Soroush's **frozen contract** (types + Zustand store + `POST /api/generate`).
-You never implement Gemini calls, prompts, or store internals yourself ΓÇö only call the public store actions and fetch the API.
+You never implement Gemini calls, prompts, or store internals yourself — only call the public store actions and fetch the API.
 
 Soroush owns: `lib/types.ts`, `lib/store.ts`, `lib/prompts.ts`, `app/api/generate/route.ts`, `.env.local`.
 
@@ -46,7 +46,7 @@ If a type/action/API field is missing ΓåÆ message Soroush. Do not patch his l
 ### Form fields to collect (`WeddingFormData`)
 
 - `budget` (required)
-- `location` (required text ΓÇö city/region)
+- `location` (required text — city/region)
 - `weddingDate` (required `YYYY-MM-DD`)
 - `weddingTime` (optional `HH:mm`)
 - `guestCount` (required)
@@ -85,7 +85,7 @@ AI is **Gemini** (Soroush's side). You only show loading while waiting.
 
 ## Design rules (hackathon)
 
-- Editorial / premium ΓÇö not generic wedding-app chrome
+- Editorial / premium — not generic wedding-app chrome
 - Motion: fade + slide only, no bounce
 - Cards OK in planner (interaction containers); not in the hero
 
@@ -97,7 +97,7 @@ AI is **Gemini** (Soroush's side). You only show loading while waiting.
 - Never rename store actions or type fields yourself
 - Never add Anthropic/Claude or call Gemini from the client
 - Prefer small commits in `components/` + `app/page.tsx` / layout / globals only
-- If blocked, ping Soroush ΓÇö do not edit `lib/` or `app/api/`
+- If blocked, ping Soroush — do not edit `lib/` or `app/api/`
 
 ---
 

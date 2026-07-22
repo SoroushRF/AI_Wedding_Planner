@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -13,7 +13,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "TBD ΓÇö Your wedding, thoughtfully planned",
+  title: "TBD — Your wedding, thoughtfully planned",
   description:
     "AI wedding planner that builds a personalized, editable budget plan in under a minute.",
 };

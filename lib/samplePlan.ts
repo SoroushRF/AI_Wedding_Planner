@@ -1,4 +1,4 @@
-﻿import type { PlanComponent, WeddingFormData, WeddingPlan } from "@/lib/types";
+import type { PlanComponent, WeddingFormData, WeddingPlan } from "@/lib/types";
 
 function scaleCosts(components: PlanComponent[], budget: number): PlanComponent[] {
   const total = components.reduce((sum, c) => sum + c.estimatedCost, 0);
