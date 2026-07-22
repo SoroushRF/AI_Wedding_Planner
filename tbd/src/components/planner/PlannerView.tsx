@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AddComponentModal } from "@/components/planner/AddComponentModal";
 import { BudgetBar } from "@/components/planner/BudgetBar";
 import { PlanCard } from "@/components/planner/PlanCard";
-import { usePlanStore } from "@/lib/store";
+import { useWeddingStore } from "@/lib/store";
 import type { VenueType, Vibe } from "@/lib/types";
 
 const VENUE_LABELS: Record<VenueType, string> = {
@@ -34,11 +34,10 @@ function formatSummaryDate(isoDate: string) {
 }
 
 export function PlannerView() {
-  const plan = usePlanStore((s) => s.plan);
-  const removeComponent = usePlanStore((s) => s.removeComponent);
-  const addComponent = usePlanStore((s) => s.addComponent);
-  const clearPlan = usePlanStore((s) => s.clearPlan);
-  const setView = usePlanStore((s) => s.setView);
+  const plan = useWeddingStore((s) => s.plan);
+  const removeComponent = useWeddingStore((s) => s.removeComponent);
+  const addComponent = useWeddingStore((s) => s.addComponent);
+  const clearPlan = useWeddingStore((s) => s.clearPlan);
 
   const [addOpen, setAddOpen] = useState(false);
 
@@ -64,7 +63,6 @@ export function PlannerView() {
       )
     ) {
       clearPlan();
-      setView("form");
     }
   };
 

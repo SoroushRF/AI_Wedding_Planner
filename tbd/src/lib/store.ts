@@ -25,7 +25,7 @@ interface PlanState {
   clearPlan: () => void;
 }
 
-export const usePlanStore = create<PlanState>()(
+export const useWeddingStore = create<PlanState>()(
   persist(
     (set) => ({
       formData: null,
@@ -63,6 +63,7 @@ export const usePlanStore = create<PlanState>()(
           plan: null,
           error: null,
           isGenerating: false,
+          view: "form",
         }),
     }),
     {

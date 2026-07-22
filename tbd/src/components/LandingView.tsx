@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { usePlanStore } from "@/lib/store";
+import { useWeddingStore } from "@/lib/store";
 
 export function LandingView() {
-  const setView = usePlanStore((s) => s.setView);
+  const setView = useWeddingStore((s) => s.setView);
 
   return (
     <section className="flex min-h-screen flex-col items-center justify-center px-6 text-center">

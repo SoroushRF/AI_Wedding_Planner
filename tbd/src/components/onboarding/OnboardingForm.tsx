@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { usePlanStore } from "@/lib/store";
+import { useWeddingStore } from "@/lib/store";
 import type { GeneratePlanResponse, VenueType, Vibe, WeddingFormData } from "@/lib/types";
 
 const VENUE_OPTIONS: { value: VenueType; label: string; hint: string }[] = [
@@ -40,13 +40,13 @@ function parseBudgetInput(raw: string): number {
 }
 
 export function OnboardingForm() {
-  const formData = usePlanStore((s) => s.formData);
-  const error = usePlanStore((s) => s.error);
-  const setFormData = usePlanStore((s) => s.setFormData);
-  const setPlan = usePlanStore((s) => s.setPlan);
-  const setView = usePlanStore((s) => s.setView);
-  const setGenerating = usePlanStore((s) => s.setGenerating);
-  const setError = usePlanStore((s) => s.setError);
+  const formData = useWeddingStore((s) => s.formData);
+  const error = useWeddingStore((s) => s.error);
+  const setFormData = useWeddingStore((s) => s.setFormData);
+  const setPlan = useWeddingStore((s) => s.setPlan);
+  const setView = useWeddingStore((s) => s.setView);
+  const setGenerating = useWeddingStore((s) => s.setGenerating);
+  const setError = useWeddingStore((s) => s.setError);
 
   const [budget, setBudget] = useState(formData?.budget ?? 25000);
   const [budgetInput, setBudgetInput] = useState(String(formData?.budget ?? 25000));

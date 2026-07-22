@@ -6,7 +6,7 @@ import { LandingView } from "@/components/LandingView";
 import { LoadingView } from "@/components/LoadingView";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { PlannerView } from "@/components/planner/PlannerView";
-import { usePlanStore } from "@/lib/store";
+import { useWeddingStore } from "@/lib/store";
 
 const pageTransition = {
   initial: { opacity: 0, y: 12 },
@@ -17,9 +17,9 @@ const pageTransition = {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const view = usePlanStore((s) => s.view);
-  const plan = usePlanStore((s) => s.plan);
-  const setView = usePlanStore((s) => s.setView);
+  const view = useWeddingStore((s) => s.view);
+  const plan = useWeddingStore((s) => s.plan);
+  const setView = useWeddingStore((s) => s.setView);
 
   useEffect(() => {
     setMounted(true);
