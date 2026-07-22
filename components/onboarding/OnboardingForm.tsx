@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowRight,
   Building2,
   CalendarDays,
   MapPin,
@@ -208,7 +209,7 @@ export function OnboardingForm() {
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl">Plan your day</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--ink-soft)]">
-              A few details — we&apos;ll build a thoughtful, editable starting plan.
+              A few details - we&apos;ll build a thoughtful, editable starting plan.
             </p>
           </div>
 
@@ -284,7 +285,7 @@ export function OnboardingForm() {
                   </Label>
                   <Input
                     id="location"
-                    placeholder="City or region — e.g. Brooklyn, NY"
+                    placeholder="City or region - e.g. Brooklyn, NY"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="rounded-none bg-background/70"
@@ -462,13 +463,16 @@ export function OnboardingForm() {
                 <div className="border border-dashed border-border bg-background/40 p-4 text-sm text-[var(--ink-soft)]">
                   <p className="font-medium text-foreground">Ready to generate</p>
                   <p className="mt-1">
-                    {formatCurrency(budget)} ┬╖ {location || "Location"} ┬╖{" "}
-                    {guestCount || "—"} guests
+                    {formatCurrency(budget)}
+                    {" | "}
+                    {location || "Location"}
+                    {" | "}
+                    {guestCount || "-"} guests
                     {venueType
-                      ? ` ┬╖ ${VENUE_OPTIONS.find((v) => v.value === venueType)?.label}`
+                      ? ` | ${VENUE_OPTIONS.find((v) => v.value === venueType)?.label}`
                       : ""}
                     {vibe
-                      ? ` ┬╖ ${VIBE_OPTIONS.find((v) => v.value === vibe)?.label}`
+                      ? ` | ${VIBE_OPTIONS.find((v) => v.value === vibe)?.label}`
                       : ""}
                   </p>
                 </div>
@@ -487,7 +491,8 @@ export function OnboardingForm() {
                     disabled={!canSubmit}
                     className="btn-editorial h-11 px-8"
                   >
-                    Generate My Plan ΓåÆ
+                    Generate My Plan
+                    <ArrowRight className="size-4" />
                   </Button>
                 </div>
               </motion.div>

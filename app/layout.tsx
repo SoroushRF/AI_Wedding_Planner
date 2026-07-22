@@ -13,7 +13,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "TBD — Your wedding, thoughtfully planned",
+  title: "TBD - Your wedding, thoughtfully planned",
   description:
     "AI wedding planner that builds a personalized, editable budget plan in under a minute.",
 };

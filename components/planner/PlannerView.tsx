@@ -86,7 +86,7 @@ export function PlannerView() {
               Your wedding plan
             </p>
             <p className="mt-1 text-sm text-[var(--ink-soft)]">
-              {summaryParts.join(" ┬╖ ")}
+              {summaryParts.join(" | ")}
             </p>
           </div>
 
