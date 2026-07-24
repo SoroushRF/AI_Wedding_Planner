@@ -209,8 +209,7 @@ export function OnboardingForm() {
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl">Plan your day</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--ink-soft)]">
-              A few details - we&apos;ll build a thoughtful, editable starting plan.
-            </p>
+              A few details - we&apos;ll build a thoughtful, editable starting plan.            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -285,8 +284,7 @@ export function OnboardingForm() {
                   </Label>
                   <Input
                     id="location"
-                    placeholder="City or region - e.g. Brooklyn, NY"
-                    value={location}
+                    placeholder="City or region - e.g. Brooklyn, NY"                    value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="rounded-none bg-background/70"
                     required
@@ -473,8 +471,7 @@ export function OnboardingForm() {
                       : ""}
                     {vibe
                       ? ` | ${VIBE_OPTIONS.find((v) => v.value === vibe)?.label}`
-                      : ""}
-                  </p>
+                      : ""}                  </p>
                 </div>
 
                 <div className="flex justify-between gap-3">
@@ -492,8 +489,7 @@ export function OnboardingForm() {
                     className="btn-editorial h-11 px-8"
                   >
                     Generate My Plan
-                    <ArrowRight className="size-4" />
-                  </Button>
+                    <ArrowRight className="size-4" />                  </Button>
                 </div>
               </motion.div>
             )}

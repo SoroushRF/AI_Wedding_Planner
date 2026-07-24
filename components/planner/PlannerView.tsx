@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -86,8 +86,7 @@ export function PlannerView() {
               Your wedding plan
             </p>
             <p className="mt-1 text-sm text-[var(--ink-soft)]">
-              {summaryParts.join(" | ")}
-            </p>
+              {summaryParts.join(" | ")}            </p>
           </div>
 
           <Button
